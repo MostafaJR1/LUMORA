@@ -10,7 +10,7 @@ import { DELIVERY_ESTIMATE, PRODUCTS, money } from "./products";
 import { SHOTS } from "./Productshots";
 
 const P = PRODUCTS[0];
-const GALLERY = [SHOTS.square, SHOTS.bottle, SHOTS.label, SHOTS.cap];
+const GALLERY = [SHOTS.bottleFront, SHOTS.marbleLifestyle, SHOTS.bottleBack, SHOTS.botanicalPortrait];
 const POINTS = [
   "بدون سلفات، لطيف على فروة الرأس",
   "5 مكونات طبيعية: زيت أزير، جل الصبار، برو فيتامين B5، البصل والجنسينغ",

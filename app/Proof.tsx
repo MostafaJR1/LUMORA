@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
 import { Reveal, RevealGroup, RevealItem } from "./Motion";
-import { U, IMG, VIDEO_SRC } from "./MediaMock";
+import { U, IMG } from "./MediaMock";
 import { AddToCartButton } from "./cart";
 
 const svg = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
@@ -29,47 +28,19 @@ const STEPS = [
 ];
 
 export function HowItWorks() {
-  const [playing, setPlaying] = useState(false);
   return (
     <section id="comment-ca-marche" aria-labelledby="how-title" className="scroll-mt-32 bg-white py-14 sm:py-20">
       <div className="mx-auto grid max-w-6xl items-center justify-center gap-10 px-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-16">
         {/* Vertical video, 9:16 */}
         <Reveal>
           <div className="relative mx-auto aspect-[9/16] w-full max-w-[300px] overflow-hidden  bg-forest-900 shadow-xl ring-1 ring-forest-900/10 sm:max-w-[340px] lg:max-w-none">
-            {playing ? (
-              <video
-                src={VIDEO_SRC}
-                poster={U(IMG.videoPoster, 900)}
-                controls
-                autoPlay
-                loop
-                playsInline
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setPlaying(true)}
-                aria-label="شغّل الفيديو"
-                className="group absolute inset-0 block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold-500"
-              >
-                <Image
-                  src={U(IMG.videoPoster, 900)}
-                  alt="طريقة استعمال شامبو LUMORA"
-                  fill
-                  unoptimized
-                  sizes="(min-width: 1024px) 33vw, 90vw"
-                  className="object-cover transition duration-500 group-hover:scale-105 motion-reduce:transition-none"
-                />
-                <span className="absolute inset-0 bg-gradient-to-t from-forest-950/80 via-forest-950/10 to-forest-950/30" />
-                <span className="absolute inset-0 m-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/95 text-forest-900 shadow-lg transition group-hover:scale-110 motion-reduce:transition-none" dir="ltr">
-                  <svg viewBox="0 0 24 24" className="ms-1 h-8 w-8 fill-current" aria-hidden><path d="M8 5v14l11-7L8 5Z" /></svg>
-                </span>
-                <span className="absolute inset-x-4 bottom-5 text-center text-base font-semibold text-white [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">
-                  شاهد الطريقة الصحيحة
-                </span>
-              </button>
-            )}
+            <Image
+              src={U(IMG.videoPoster, 900)}
+              alt="طريقة استعمال شامبو LUMORA"
+              fill
+              sizes="(min-width: 1024px) 360px, 340px"
+              className="object-cover"
+            />
           </div>
         </Reveal>
 

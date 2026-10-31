@@ -1,53 +1,25 @@
-"use client";
-
-import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { buttonStyles } from "./buttonStyles";
 import { DELIVERY_ESTIMATE, RETURNS_PROMISE } from "./products";
-
-// Put the files in /public:
-//   /public/videos/hero.mp4          (the Pixabay video, ideally < 4 MB, 1280x720 or 1920x1080)
-//   /public/images/hero-poster.jpg   (a screenshot of the first frame, shown while loading)
-const VIDEO_SRC = "/videos/hero.mp4";
-const POSTER_SRC = "/images/hero-poster.jpg";
 
 const HERO_TRUST = `الدفع عند الاستلام · التوصيل خلال ${DELIVERY_ESTIMATE} · ${RETURNS_PROMISE}`;
 const BENEFITS = ["يقوّي بصيلات الشعر", "يقلّل التساقط", "يحفّز نمو الشعر الجديد"];
 
 export default function HeroVideo() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Respect "reduce motion": show the poster only, no autoplay
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      v.pause();
-      v.removeAttribute("autoplay");
-    }
-  }, []);
-
   return (
     <section
       id="hero"
       aria-label="شامبو LUMORA ضد تساقط الشعر"
       className="relative isolate overflow-hidden bg-black"
     >
-      {/* 75svh = three quarters of the screen height (svh handles mobile browser bars) */}
       <div className="relative h-[75svh] min-h-[540px]">
-        {/* Background video.
-            -scale-x-100 mirrors the clip so the model sits on the LEFT and the Arabic text on the RIGHT (RTL).
-            The video has no text in it, so mirroring is safe. Remove the class if you prefer the original side. */}
-        <video
-          ref={videoRef}
-          className="absolute inset-0 h-full w-full -scale-x-100 object-cover object-center"
-          src={VIDEO_SRC}
-          poster={POSTER_SRC}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          aria-hidden
+        <Image
+          src="/lumora-haircare-campaign.png"
+          alt="LUMORA شامبو ضد تساقط الشعر"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
         />
 
         {/* Black overlay: overall dimming + stronger on the text side so the white background never glares */}
