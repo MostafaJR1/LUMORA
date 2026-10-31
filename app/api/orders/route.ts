@@ -1,69 +1,65 @@
+// Place this file at: app/api/orders/route.ts
+// Add to .env.local:  ORDERS_WEBHOOK_URL=<your Google Apps Script / Make / Zapier / n8n webhook URL>
 import { NextResponse } from "next/server";
-import { getProduct, SHIPPING_FEE } from "../../checkout/products";
-import { normalizePhone, validateCustomer, type Customer } from "../../checkout/orders";
 
-const bad = (error: string, status = 400) => NextResponse.json({ error }, { status });
-const str = (v: unknown, max = 300) => String(v ?? "").trim().slice(0, max);
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+const PHONE_RE = /^(?:\+212|00212|0)[5-7]\d{8}$/;
+
+const text = (v: unknown, max = 200) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
 export async function POST(req: Request) {
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return bad("طلب غير صالح");
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
-  if (!isRecord(body)) return bad("طلب غير صالح");
 
-  if (body.website) return NextResponse.json({ id: "OK" });
+  const name = text(body.name, 120);
+  const phone = text(body.phone, 20);
+  const city = text(body.city, 80);
 
-  const rawCustomer = isRecord(body.customer) ? body.customer : {};
-  const customer: Customer = {
-    name: str(rawCustomer.name, 80),
-    phone: normalizePhone(str(rawCustomer.phone, 30)),
-    city: str(rawCustomer.city, 60),
-    address: str(rawCustomer.address, 200),
-    notes: str(rawCustomer.notes, 300),
+  if (name.length < 3 || !PHONE_RE.test(phone) || city.length < 2) {
+    return NextResponse.json({ error: "invalid_fields" }, { status: 400 });
+  }
+
+  const rawItems = Array.isArray(body.items) ? body.items : [];
+  const items = rawItems
+    .map((it: Record<string, unknown>) => ({
+      id: text(it?.id, 80),
+      name: text(it?.name, 160),
+      qty: Math.min(20, Math.max(1, Math.floor(Number(it?.qty) || 0))),
+      price: Number(it?.price) || 0,
+    }))
+    .filter((it: { id: string; qty: number }) => it.id && it.qty > 0);
+
+  if (items.length === 0) {
+    return NextResponse.json({ error: "empty_order" }, { status: 400 });
+  }
+
+  const webhook = process.env.ORDERS_WEBHOOK_URL;
+  if (!webhook) {
+    // Not configured yet: the form shows its error message instead of pretending the order was saved
+    return NextResponse.json({ error: "not_configured" }, { status: 501 });
+  }
+
+  const orderId = `LM-${Date.now().toString(36).toUpperCase()}`;
+  const payload = {
+    orderId,
+    createdAt: new Date().toISOString(),
+    name,
+    phone,
+    city,
+    items,
+    subtotal: Number(body.subtotal) || 0, // sent by the browser: re-check it when you confirm by phone
+    payment: "COD",
   };
-  if (Object.keys(validateCustomer(customer)).length) return bad("بيانات التوصيل غير صالحة", 422);
 
-  const raw: unknown[] = Array.isArray(body.items) ? body.items : [];
-  const items = raw
-    .map((item) => {
-      if (!isRecord(item)) return null;
-      const p = getProduct(String(item.id));
-      const qty = Number(item.qty);
-      return p && Number.isInteger(qty) && qty >= 1 && qty <= 10 ? { id: p.id, qty, unit_price: p.price } : null;
-    })
-    .filter((x): x is { id: string; qty: number; unit_price: number } => x !== null);
-  if (!items.length || items.length !== raw.length) return bad("السلة غير صالحة", 422);
-
-  const subtotal = items.reduce((s, i) => s + i.qty * i.unit_price, 0);
-  const order = { customer, items, shipping: SHIPPING_FEE, total: subtotal + SHIPPING_FEE, payment: "cod" };
-
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    if (process.env.NODE_ENV === "production") return bad("الخدمة غير متاحة مؤقتاً. حاول لاحقاً.", 503);
-    console.log("[order:dev] Supabase not configured, order not saved:", order);
-    return NextResponse.json({ id: "DEV-" + Date.now().toString(36).toUpperCase() });
-  }
-
-  const res = await fetch(`${url}/rest/v1/orders`, {
+  const res = await fetch(webhook, {
     method: "POST",
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-    },
-    body: JSON.stringify(order),
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload),
   });
+
   if (!res.ok) {
-    console.error("[order] Supabase error:", await res.text());
-    return bad("تعذّر حفظ طلبك. حاول مرة أخرى بعد قليل.", 502);
+    return NextResponse.json({ error: "webhook_failed" }, { status: 502 });
   }
-  const [row] = await res.json();
-  return NextResponse.json({ id: row.id });
+  return NextResponse.json({ ok: true, orderId });
 }

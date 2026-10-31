@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { buttonStyles, type Variant } from "./buttonStyles";
 import { getProduct, type Product } from "./products";
 
@@ -43,26 +43,65 @@ function read(): Line[] {
   }
 }
 
+type CartState = { lines: Line[]; ready: boolean };
+type LinesUpdater = (previous: Line[]) => Line[];
+
+const EMPTY_CART_STATE: CartState = { lines: [], ready: false };
+let cartState = EMPTY_CART_STATE;
+const listeners = new Set<() => void>();
+
+function notify() {
+  listeners.forEach((listener) => listener());
+}
+
+function save(lines: Line[]) {
+  try { localStorage.setItem(KEY, JSON.stringify(lines)); } catch {}
+}
+
+function onStorage(event: StorageEvent) {
+  if (event.key !== KEY && event.key !== null) return;
+  const lines = read();
+  save(lines);
+  cartState = { lines, ready: true };
+  notify();
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  if (typeof window !== "undefined") {
+    if (!cartState.ready) {
+      const lines = read();
+      save(lines);
+      cartState = { lines, ready: true };
+      notify();
+    }
+    window.addEventListener("storage", onStorage);
+  }
+  return () => {
+    listeners.delete(listener);
+    if (typeof window !== "undefined") window.removeEventListener("storage", onStorage);
+  };
+}
+
+function getSnapshot() {
+  return cartState;
+}
+
+function getServerSnapshot() {
+  return EMPTY_CART_STATE;
+}
+
+function updateLines(updater: LinesUpdater) {
+  const lines = updater(cartState.lines);
+  save(lines);
+  cartState = { lines, ready: true };
+  notify();
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [lines, setLines] = useState<Line[]>([]);
-  const [ready, setReady] = useState(false);
+  const { lines, ready } = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [open, setOpen] = useState(false);
   const [flash, setFlash] = useState(false);
-
-  // load + keep tabs in sync
-  useEffect(() => {
-    setLines(read());
-    setReady(true);
-    const onStorage = (e: StorageEvent) => e.key === KEY && setLines(read());
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
-
-  // save
-  useEffect(() => {
-    if (!ready) return;
-    try { localStorage.setItem(KEY, JSON.stringify(lines)); } catch {}
-  }, [lines, ready]);
 
   useEffect(() => {
     if (!flash) return;
@@ -72,7 +111,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add = useCallback((id: string, qty = 1) => {
     if (!getProduct(id)) return;
-    setLines((p) =>
+    updateLines((p) =>
       p.some((l) => l.id === id)
         ? p.map((l) => (l.id === id ? { ...l, qty: Math.min(MAX_QTY, l.qty + qty) } : l))
         : [...p, { id, qty: Math.min(MAX_QTY, qty) }]
@@ -81,9 +120,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setOpen(true);
   }, []);
   const setQty = useCallback((id: string, qty: number) =>
-    setLines((p) => (qty <= 0 ? p.filter((l) => l.id !== id) : p.map((l) => (l.id === id ? { ...l, qty: Math.min(MAX_QTY, qty) } : l)))), []);
-  const remove = useCallback((id: string) => setLines((p) => p.filter((l) => l.id !== id)), []);
-  const clear = useCallback(() => setLines([]), []);
+    updateLines((p) => (qty <= 0 ? p.filter((l) => l.id !== id) : p.map((l) => (l.id === id ? { ...l, qty: Math.min(MAX_QTY, qty) } : l)))), []);
+  const remove = useCallback((id: string) => updateLines((p) => p.filter((l) => l.id !== id)), []);
+  const clear = useCallback(() => updateLines(() => []), []);
 
   const items = lines.map((l) => ({ ...getProduct(l.id)!, qty: l.qty }));
   const count = items.reduce((s, i) => s + i.qty, 0);

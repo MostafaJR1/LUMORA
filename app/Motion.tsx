@@ -77,8 +77,8 @@ export function Reveal({
   );
 }
 
-type Tag = "div" | "ul" | "dl" | "li";
-const TAGS = { div: motion.div, ul: motion.ul, dl: motion.dl, li: motion.li } as const;
+type Tag = "div" | "ul" | "ol" | "dl" | "li";
+const TAGS = { div: motion.div, ul: motion.ul, ol: motion.ol, dl: motion.dl, li: motion.li } as const;
 
 const item: Variants = {
   hidden: { opacity: 0, y: 28 },

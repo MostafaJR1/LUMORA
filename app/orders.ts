@@ -24,6 +24,7 @@ export type OrderInput = {
 };
 
 export async function submitOrder(_input: OrderInput): Promise<{ id: string }> {
+  void _input;
   // TODO (later):
   // const { data, error } = await supabase.from("orders").insert({ ... }).select("id").single();
   // if (error) throw error;

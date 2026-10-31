@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { buttonStyles } from "./buttonStyles";
 import { Reveal } from "./Motion";
 import { U, IMG } from "./MediaMock";
@@ -36,14 +37,16 @@ export default function BeforeAfter({ buyUrl }: { buyUrl: string }) {
         <Reveal className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Slider (LTR inside so "before" is always left) */}
           <div dir="ltr" className="relative mx-auto aspect-[4/5] w-full max-w-md select-none overflow-hidden rounded-3xl bg-forest-900/10 shadow-xl ring-1 ring-forest-900/10 focus-within:outline focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-gold-500">
-            <img src={U(c.after, 900)} alt={`${c.name} بعد ${c.weeks} أسابيع`} loading="lazy" draggable={false} style={{ filter: AFTER_FILTER }} className="absolute inset-0 h-full w-full object-cover" />
-            <img
+            <Image src={U(c.after, 900)} alt={`${c.name} بعد ${c.weeks} أسابيع`} fill unoptimized sizes="(min-width: 640px) 448px, 100vw" draggable={false} style={{ filter: AFTER_FILTER }} className="object-cover" />
+            <Image
               src={U(c.before, 900)}
               alt={`${c.name} قبل الاستعمال`}
-              loading="lazy"
+              fill
+              unoptimized
+              sizes="(min-width: 640px) 448px, 100vw"
               draggable={false}
               style={{ filter: BEFORE_FILTER, clipPath: `inset(0 ${100 - pos}% 0 0)` }}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="object-cover"
             />
 
             <span className="absolute start-3 top-3 rounded-full bg-forest-950/75 px-3 py-1 text-sm font-semibold text-cream backdrop-blur">قبل</span>

@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { Reveal, RevealGroup, RevealItem } from "./Motion";
 import { U, IMG, VIDEO_SRC } from "./MediaMock";
+import { AddToCartButton } from "./cart";
 
 const svg = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
 
@@ -18,49 +20,89 @@ function Stars({ n = 5 }: { n?: number }) {
   );
 }
 
-/* ---------- How it works + video proof ---------- */
+/* ---------- How it works + vertical video (TikTok / Reels ratio 9:16) ---------- */
+// Copy follows the product label: used on wet hair, gentle scalp massage until it foams, rinse well, once a week.
 const STEPS = [
-  { t: "بلّل شعرك ودلّك الفروة", d: "ضع كمية صغيرة ودلّك بلطف لمدة دقيقة." },
-  { t: "اتركه دقيقتين", d: "لتصل المكونات الطبيعية إلى الجذور." },
-  { t: "اشطفه جيداً", d: "مرة واحدة في الأسبوع تكفي لأفضل النتائج." },
+  { t: "بلّل شعرك جيداً", d: "يُستعمل الشامبو على شعر مبلّل، بكمية صغيرة تكفي." },
+  { t: "دلّك فروة الرأس بلطف", d: "حتى تتكوّن الرغوة، فتتوزّع التركيبة الطبيعية على فروة الرأس." },
+  { t: "اشطفه جيداً", d: "مرة واحدة في الأسبوع للحصول على أفضل النتائج." },
 ];
 
 export function HowItWorks() {
   const [playing, setPlaying] = useState(false);
   return (
-    <section id="comment-ca-marche" aria-labelledby="how-title" className="scroll-mt-32 bg-white py-12 sm:py-16">
-      <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
+    <section id="comment-ca-marche" aria-labelledby="how-title" className="scroll-mt-32 bg-white py-14 sm:py-20">
+      <div className="mx-auto grid max-w-6xl items-center justify-center gap-10 px-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:gap-16">
+        {/* Vertical video, 9:16 */}
         <Reveal>
-          <div className="relative aspect-video overflow-hidden rounded-3xl bg-forest-900 shadow-xl ring-1 ring-forest-900/10">
+          <div className="relative mx-auto aspect-[9/16] w-full max-w-[300px] overflow-hidden  bg-forest-900 shadow-xl ring-1 ring-forest-900/10 sm:max-w-[340px] lg:max-w-none">
             {playing ? (
-              <video src={VIDEO_SRC} poster={U(IMG.videoPoster, 1200)} controls autoPlay playsInline className="h-full w-full object-cover" />
+              <video
+                src={VIDEO_SRC}
+                poster={U(IMG.videoPoster, 900)}
+                controls
+                autoPlay
+                loop
+                playsInline
+                className="h-full w-full object-cover"
+              />
             ) : (
-              <button type="button" onClick={() => setPlaying(true)} aria-label="شغّل الفيديو" className="group absolute inset-0 block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold-500">
-                <img src={U(IMG.videoPoster, 1200)} alt="طريقة استعمال شامبو LUMORA" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105 motion-reduce:transition-none" />
-                <span className="absolute inset-0 bg-gradient-to-t from-forest-950/70 via-forest-950/10 to-transparent" />
+              <button
+                type="button"
+                onClick={() => setPlaying(true)}
+                aria-label="شغّل الفيديو"
+                className="group absolute inset-0 block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold-500"
+              >
+                <Image
+                  src={U(IMG.videoPoster, 900)}
+                  alt="طريقة استعمال شامبو LUMORA"
+                  fill
+                  unoptimized
+                  sizes="(min-width: 1024px) 33vw, 90vw"
+                  className="object-cover transition duration-500 group-hover:scale-105 motion-reduce:transition-none"
+                />
+                <span className="absolute inset-0 bg-gradient-to-t from-forest-950/80 via-forest-950/10 to-forest-950/30" />
                 <span className="absolute inset-0 m-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/95 text-forest-900 shadow-lg transition group-hover:scale-110 motion-reduce:transition-none" dir="ltr">
                   <svg viewBox="0 0 24 24" className="ms-1 h-8 w-8 fill-current" aria-hidden><path d="M8 5v14l11-7L8 5Z" /></svg>
                 </span>
-                <span className="absolute bottom-4 start-4 rounded-full bg-forest-950/70 px-3 py-1 text-sm font-medium text-cream backdrop-blur">شاهد الطريقة في 45 ثانية</span>
+                <span className="absolute inset-x-4 bottom-5 text-center text-base font-semibold text-white [text-shadow:0_1px_10px_rgba(0,0,0,0.5)]">
+                  شاهد الطريقة الصحيحة
+                </span>
               </button>
             )}
           </div>
         </Reveal>
 
+        {/* Copy */}
         <Reveal>
-          <p className="mb-2 text-sm font-semibold text-gold-500">كيف يعمل</p>
-          <h2 id="how-title" className="text-3xl font-semibold text-forest-900 sm:text-4xl">ثلاث خطوات بسيطة</h2>
-          <ol className="mt-6 space-y-4">
+          <p className="mb-2 text-sm font-semibold text-gold-500">طريقة الاستعمال</p>
+          <h2 id="how-title" className="text-3xl font-semibold leading-tight text-forest-900 sm:text-4xl">
+            ثلاث خطوات بسيطة،
+            <span className="block font-light text-forest-900/60">مرة واحدة في الأسبوع.</span>
+          </h2>
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-forest-900/75">
+            شامبو LUMORA ضد التساقط بخمسة مكونات طبيعية وبدون سلفات. شاهد الفيديو وتعرّف على الطريقة الموصى بها، بلا تعقيد.
+          </p>
+
+          <ol className="mt-7 space-y-5">
             {STEPS.map((s, i) => (
               <li key={s.t} className="flex gap-4">
-                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-forest-900 text-sm font-semibold text-gold-300" dir="ltr">{i + 1}</span>
+                <span className="flex h-10 w-10 flex-none items-center justify-center  bg-forest-900 text-sm font-semibold text-gold-300" dir="ltr">{i + 1}</span>
                 <div>
                   <h3 className="font-semibold text-forest-900">{s.t}</h3>
-                  <p className="mt-1 text-sm text-forest-900/70">{s.d}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-forest-900/70">{s.d}</p>
                 </div>
               </li>
             ))}
           </ol>
+
+          <p className="mt-6 flex items-start gap-2 text-sm leading-relaxed text-forest-900/60">
+            <svg {...svg} className="mt-0.5 h-4 w-4 flex-none"><circle cx="12" cy="12" r="9" /><path d="M12 8h.01M11 12h1v5h1" /></svg>
+            لا يُستعمل على الشعر الجاف، ولا على الشعر المعالج بالبروتين.
+          </p>
+
+          {/* adds to the cart; the cart drawer then opens by itself (see CartDrawer.tsx) */}
+          <AddToCartButton productId="lumora-shampoo-150" variant="green" size="lg" className="group mt-7" />
         </Reveal>
       </div>
     </section>
@@ -84,7 +126,7 @@ export function Testimonials() {
             <p className="mb-2 text-sm font-semibold text-gold-500">آراء العملاء</p>
             <h2 id="rev-title" className="text-3xl font-semibold text-forest-900 sm:text-4xl">ماذا يقولون عن LUMORA</h2>
           </div>
-          <div className="flex items-center gap-4 rounded-2xl bg-white px-5 py-3 shadow-sm ring-1 ring-forest-900/10">
+          <div className="flex items-center gap-4  bg-white px-5 py-3 shadow-sm ring-1 ring-forest-900/10">
             <span className="text-4xl font-light text-forest-900" dir="ltr">4.8</span>
             <div><Stars /><p className="mt-1 text-sm text-forest-900/65">متوسط تقييمات العملاء</p></div>
           </div>
@@ -92,11 +134,11 @@ export function Testimonials() {
 
         <RevealGroup as="ul" className="grid gap-5 md:grid-cols-3">
           {REVIEWS.map((r) => (
-            <RevealItem key={r.name} as="li" className="flex flex-col rounded-3xl bg-white p-6 shadow-sm ring-1 ring-forest-900/10">
+            <RevealItem key={r.name} as="li" className="flex flex-col  bg-white p-6 shadow-sm ring-1 ring-forest-900/10">
               <Stars />
               <blockquote className="mt-4 flex-1 leading-relaxed text-forest-900/85">“{r.text}”</blockquote>
               <div className="mt-6 flex items-center gap-3">
-                <img src={U(r.img, 160)} alt={r.name} loading="lazy" width={44} height={44} className="h-11 w-11 rounded-full bg-cream object-cover" />
+                <Image src={U(r.img, 160)} alt={r.name} width={44} height={44} unoptimized className="h-11 w-11  bg-cream object-cover" />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-forest-900">{r.name} <span className="font-normal text-forest-900/55">· {r.city}</span></p>
                   <p className="mt-0.5 flex items-center gap-1 text-sm font-medium text-forest-700">
@@ -114,8 +156,8 @@ export function Testimonials() {
           <h3 className="mb-5 text-center text-xl font-semibold text-forest-900">من مجتمع LUMORA</h3>
           <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {IMG.ugc.map((id, i) => (
-              <li key={id + i} className="group relative aspect-square overflow-hidden rounded-2xl bg-forest-900/10">
-                <img src={U(id, 600)} alt={`صورة عميلة رقم ${i + 1}`} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105 motion-reduce:transition-none" />
+              <li key={id + i} className="group relative aspect-square overflow-hidden  bg-forest-900/10">
+                <Image src={U(id, 600)} alt={`صورة عميلة رقم ${i + 1}`} fill unoptimized sizes="(min-width: 768px) 25vw, 50vw" className="object-cover transition duration-500 group-hover:scale-105 motion-reduce:transition-none" />
                 <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-forest-950/70 to-transparent p-3 text-sm font-medium text-cream" dir="ltr">@lumora.ma</span>
               </li>
             ))}

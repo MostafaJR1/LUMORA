@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent, type InputHTMLAttributes } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "../cart";
 import { buttonStyles } from "../buttonStyles";
@@ -168,8 +169,8 @@ export default function CheckoutForm() {
         <ul className="mt-5 divide-y divide-forest-900/10">
           {items.map((it) => (
             <li key={it.id} className="flex items-center gap-4 py-4">
-              <span className="relative flex-none">
-                <img src={it.img} alt="" width={64} height={64} className="h-16 w-16 rounded-xl bg-cream object-cover" />
+              <span className="relative block h-16 w-16 flex-none">
+                <Image src={it.img} alt="" fill sizes="64px" className="rounded-xl bg-cream object-cover" />
                 <span dir="ltr" className="absolute -right-2 -top-2 flex h-6 min-w-[24px] items-center justify-center rounded-full bg-forest-900 px-1 text-xs font-semibold text-cream ring-2 ring-white">{it.qty}</span>
               </span>
               <div className="min-w-0 flex-1">
