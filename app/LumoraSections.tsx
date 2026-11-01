@@ -77,7 +77,7 @@ export function QuickSteps() {
         </Reveal>
         <RevealGroup as="ol" className="mt-8 grid gap-8 sm:grid-cols-3 sm:gap-10">
           {STEPS.map((s, i) => (
-            <RevealItem key={s.t} as="li" className="border-t-2 border-forest-900 pt-4">
+            <RevealItem key={s.t} as="li" className="border-t-1 border-neutral-500/50 pt-4">
               <span className="text-sm font-semibold text-gold-500" dir="ltr">0{i + 1}</span>
               <h3 className="mt-2 text-lg font-semibold text-forest-900">{s.t}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-forest-900/70">{s.d}</p>

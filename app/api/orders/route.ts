@@ -1,10 +1,16 @@
-// Place this file at: app/api/orders/route.ts
-// Add to .env.local:  ORDERS_WEBHOOK_URL=<your Google Apps Script / Make / Zapier / n8n webhook URL>
 import { NextResponse } from "next/server";
+import { getSupabaseAdmin } from "../../../lib/supabaseAdmin";
+import { PRODUCTS } from "../../products";
+import { normalizePhone, validateCustomer, type Customer } from "../../checkout/orders";
 
-const PHONE_RE = /^(?:\+212|00212|0)[5-7]\d{8}$/;
+const text = (value: unknown, max = 200) =>
+  typeof value === "string" ? value.trim().slice(0, max) : "";
 
-const text = (v: unknown, max = 200) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+function clampQuantity(value: unknown) {
+  const quantity = Number(value);
+  if (!Number.isFinite(quantity)) return 1;
+  return Math.min(20, Math.max(1, Math.floor(quantity)));
+}
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -12,54 +18,110 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
 
-  const name = text(body.name, 120);
-  const phone = text(body.phone, 20);
-  const city = text(body.city, 80);
+  const bodyRecord = body as Record<string, unknown>;
+  if (typeof bodyRecord.website === "string" && bodyRecord.website.trim().length > 0) {
+    return NextResponse.json({ ok: true });
+  }
 
-  if (name.length < 3 || !PHONE_RE.test(phone) || city.length < 2) {
+  const customerRecord = bodyRecord.customer;
+  const isCheckoutPayload = customerRecord !== null && typeof customerRecord === "object";
+  const customer = isCheckoutPayload
+    ? customerRecord as Record<string, unknown>
+    : bodyRecord;
+
+  const normalizedCustomer: Customer = {
+    name: text(customer.name),
+    phone: normalizePhone(text(customer.phone, 20)),
+    city: text(customer.city),
+    address: isCheckoutPayload ? text(customer.address, 500) : "",
+    notes: typeof customer.notes === "string" ? customer.notes.trim().slice(0, 301) : "",
+  };
+
+  const notesText = normalizedCustomer.notes ?? "";
+
+  if (isCheckoutPayload) {
+    const errors = validateCustomer(normalizedCustomer);
+    if (
+      Object.keys(errors).length > 0 ||
+      normalizedCustomer.name.length > 120 ||
+      normalizedCustomer.city.length > 80 ||
+      notesText.length > 300
+    ) {
+      return NextResponse.json({ error: "invalid_fields" }, { status: 400 });
+    }
+  } else if (
+    normalizedCustomer.name.length < 3 ||
+    normalizedCustomer.name.length > 120 ||
+    !/^0[5-7]\d{8}$/.test(normalizedCustomer.phone) ||
+    normalizedCustomer.city.length < 2 ||
+    normalizedCustomer.city.length > 80
+  ) {
     return NextResponse.json({ error: "invalid_fields" }, { status: 400 });
   }
 
-  const rawItems = Array.isArray(body.items) ? body.items : [];
-  const items = rawItems
-    .map((it: Record<string, unknown>) => ({
-      id: text(it?.id, 80),
-      name: text(it?.name, 160),
-      qty: Math.min(20, Math.max(1, Math.floor(Number(it?.qty) || 0))),
-      price: Number(it?.price) || 0,
-    }))
-    .filter((it: { id: string; qty: number }) => it.id && it.qty > 0);
-
-  if (items.length === 0) {
+  const rawItems = Array.isArray(bodyRecord.items) ? bodyRecord.items : [];
+  if (rawItems.length === 0) {
     return NextResponse.json({ error: "empty_order" }, { status: 400 });
   }
 
-  const webhook = process.env.ORDERS_WEBHOOK_URL;
-  if (!webhook) {
-    // Not configured yet: the form shows its error message instead of pretending the order was saved
+  const quantities = new Map<string, number>();
+  for (const rawItem of rawItems) {
+    if (!rawItem || typeof rawItem !== "object") continue;
+    const itemRecord = rawItem as Record<string, unknown>;
+    const id = text(itemRecord.id, 80);
+    if (!id) continue;
+    quantities.set(id, Math.min(20, (quantities.get(id) ?? 0) + clampQuantity(itemRecord.qty)));
+  }
+
+  if (quantities.size === 0) {
+    return NextResponse.json({ error: "empty_order" }, { status: 400 });
+  }
+
+  const storedItems: { id: string; name: string; qty: number; unit_price: number }[] = [];
+  let total = 0;
+
+  for (const [id, qty] of quantities) {
+    const product = PRODUCTS.find((candidate) => candidate.id === id);
+    if (!product) {
+      return NextResponse.json({ error: "bad_request" }, { status: 400 });
+    }
+    storedItems.push({ id, name: product.name, qty, unit_price: product.price });
+    total += product.price * qty;
+  }
+
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "not_configured" }, { status: 501 });
   }
 
-  const orderId = `LM-${Date.now().toString(36).toUpperCase()}`;
-  const payload = {
-    orderId,
-    createdAt: new Date().toISOString(),
-    name,
-    phone,
-    city,
-    items,
-    subtotal: Number(body.subtotal) || 0, // sent by the browser: re-check it when you confirm by phone
-    payment: "COD",
-  };
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("orders")
+      .insert({
+        customer_name: normalizedCustomer.name,
+        phone: normalizedCustomer.phone,
+        city: normalizedCustomer.city,
+        items: storedItems,
+        total,
+      })
+      .select("order_number")
+      .single();
 
-  const res = await fetch(webhook, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+    if (error) {
+      console.error("Supabase order insert failed");
+      return NextResponse.json(
+        { error: "تعذّر إرسال طلبك. حاول مرة أخرى بعد قليل." },
+        { status: 502 },
+      );
+    }
 
-  if (!res.ok) {
-    return NextResponse.json({ error: "webhook_failed" }, { status: 502 });
+    const orderNumber = String(data.order_number);
+    return NextResponse.json({ ok: true, id: orderNumber, orderId: orderNumber });
+  } catch {
+    console.error("Supabase order insert failed");
+    return NextResponse.json(
+      { error: "تعذّر إرسال طلبك. حاول مرة أخرى بعد قليل." },
+      { status: 502 },
+    );
   }
-  return NextResponse.json({ ok: true, orderId });
 }

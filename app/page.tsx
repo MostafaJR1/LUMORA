@@ -12,6 +12,7 @@ import { HowItWorks } from "./Proof";
 import { Ingredients, QuickSteps, ClosingCTA } from "./LumoraSections";
 import { SHOTS } from "./Productshots"; // ← product photos (see /public/images)
 import { DELIVERY_ESTIMATE } from "./products";
+import { buttonStyles } from "./buttonStyles";
 
 /* =====================  HEADER  ===================== */
 const icon = "h-5 w-5 stroke-current fill-none stroke-[1.6]";
@@ -101,9 +102,10 @@ function Header() {
       >
         <div className="mx-auto flex h-8 max-w-7xl items-center justify-center gap-4 px-4 sm:justify-between">
           <span className="hidden sm:inline">صنع في المغرب</span>
-          <span>
-            <span className="me-2 rounded-sm bg-gold-400 px-1.5 py-0.5 font-bold text-forest-950">جديد</span>
-            وصل شامبو LUMORA ضد تساقط الشعر
+          <span className="whitespace-nowrap">
+            <span className="font-bold text-gold-300">الدفع عند الاستلام</span>
+            <span aria-hidden className="mx-2 text-cream/50">·</span>
+            التوصيل خلال {DELIVERY_ESTIMATE}
           </span>
           <span className="hidden sm:inline">بدون سلفات</span>
         </div>
@@ -164,7 +166,7 @@ function Header() {
               </nav>
             )}
             <OrderButton
-              className={`hidden min-h-10 cursor-pointer items-center rounded-lg bg-gold-400 px-5 font-bold text-forest-950 transition-colors hover:bg-gold-300 [text-shadow:none] sm:inline-flex ${focus}`}
+              className={buttonStyles({ variant: "gold", size: "sm", className: "cursor-pointer max-sm:hidden [text-shadow:none]" })}
             >
               اطلب الآن
             </OrderButton>
@@ -219,8 +221,8 @@ function Header() {
 /* =====================  HERO (looping video)  ===================== */
 // Put the two videos in /public/videos and the first frame of each in /public/images (JPG, used as poster).
 const HERO = {
-  desktop: { src: "/videos/hero.mp4", poster: "/images/hero-desktop-poster.jpg" }, // 16:9
-  mobile: { src: "/videos/hero-mobile.mp4", poster: "/images/hero-mobile-poster.jpg" }, // 9:16
+  desktop: { src: "https://res.cloudinary.com/dg7htktxp/video/upload/v1793547992/hero_2_jhisu2.mp4", poster: "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548159/Shampoo_bottle_on_marble_vanity_28dbb7c8_2K_d0vswp.jpg" }, // 16:9
+  mobile: { src: "https://res.cloudinary.com/dg7htktxp/video/upload/v1793547982/hero-mobile_jbl2gc.mp4", poster: "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548154/Lumora_Anti-Hair_Loss_Shampoo_Spa_Still_Life_y5lzhx.png" }, // 9:16
 };
 
 function useMatch(query: string) {
@@ -290,14 +292,11 @@ function Hero() {
         <div className="md:max-w-md">
           <div className="flex flex-col gap-3 sm:flex-row">
             <OrderButton
-              className={`inline-flex min-h-12 cursor-pointer items-center justify-center rounded-lg bg-gold-400 px-8 text-[0.9375rem] font-bold text-forest-950 transition-colors hover:bg-gold-300 ${focus}`}
-            >
+  className={buttonStyles({ variant: "gold", size: "lg", className: "cursor-pointer" })}
+>
               اطلب الآن
             </OrderButton>
-            <a
-              href="#results-title"
-              className={`inline-flex min-h-12 items-center justify-center rounded-lg border border-white/50 px-8 text-[0.9375rem] font-semibold text-white transition-colors hover:bg-white/10 ${focus}`}
-            >
+            <a href="#results-title" className={buttonStyles({ variant: "light", size: "lg" })}>
               اكتشف المكونات
             </a>
           </div>
@@ -316,12 +315,12 @@ function Hero() {
 // While this list is empty the whole section stays hidden.
 type Result = { before: string; after: string; alt: string; caption: string };
 const RESULTS: Result[] = [
-  // {
-  //   before: "/results/01-before.jpg",
-  //   after: "/results/01-after.jpg",
-  //   alt: "فروة رأس زبونة من LUMORA",
-  //   caption: "بعد 8 أسابيع من الاستعمال المنتظم",
-  // },
+  {
+    before: "https://res.cloudinary.com/dg7htktxp/image/upload/v1793547769/4ee49cd0098843ef9f96a2abdf59f06d44_r03qir.jpg",
+    after: "https://res.cloudinary.com/dg7htktxp/image/upload/v1793547769/4ee49cd0098843ef9f96a2abdf59f06d_ii0j82.jpg",
+    alt: "فروة رأس زبونة من LUMORA",
+    caption: "بعد 8 أسابيع من الاستعمال المنتظم",
+  },
 ];
 
 function Compare({ item }: { item: Result }) {
@@ -366,10 +365,10 @@ function Results() {
     <section id="real-results" aria-labelledby="real-results-title" className="scroll-mt-28 bg-white py-10 sm:py-14">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <h2 id="real-results-title" className="text-2xl font-semibold text-forest-950 sm:text-3xl">
-          نتائج زبائننا
+          نتائج حقيقية
         </h2>
-        <p className="mt-2 max-w-xl text-[0.9375rem] text-forest-800">
-          صور حقيقية نُشرت بموافقة أصحابها. تختلف النتائج من شخص لآخر.
+        <p className="mt-3 text-[0.8125rem] font-medium text-gold-500 sm:text-sm">
+          قد تختلف النتائج حسب حالة الشعر وفروة الرأس.
         </p>
         <div className="mt-7 grid grid-cols-[repeat(auto-fit,minmax(16rem,22rem))] justify-center gap-5">
           {RESULTS.map((r) => (

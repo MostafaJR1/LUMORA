@@ -4,21 +4,21 @@ export const U = (id: string, w = 900) => {
 };
 
 export const IMG = {
-  hero: "/lumora-hero-campaign.png",
-  shampoo: "/lumora-bottle-front.png",
-  care: "/lumora-botanical-portrait.jpg",
-  routine: "/lumora-marble-lifestyle.jpg",
-  videoPoster: "/lumora-haircare-campaign.png",
+  hero: "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548159/Shampoo_bottle_on_marble_vanity_28dbb7c8_2K_d0vswp.jpg",
+  shampoo: "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548154/LUMORA_Anti-Hair_Loss_Shampoo_Bottle_h47gkg.png",
+  care: "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548154/Lumora_Anti-Hair_Loss_Shampoo_Spa_Still_Life_y5lzhx.png",
+  routine: "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548159/Shampoo_bottle_on_marble_vanity_28dbb7c8_2K_d0vswp.jpg",
+  videoPoster: "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548154/Lumora_Anti-Hair_Loss_Shampoo_Spa_Still_Life_y5lzhx.png",
   people: [
-    "/lumora-bottle-front.png",
-    "/lumora-botanical-portrait.jpg",
-    "/lumora-marble-lifestyle.jpg",
-    "/lumora-bottle-back.png",
+    "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548154/LUMORA_Anti-Hair_Loss_Shampoo_Bottle_h47gkg.png",
+    "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548154/Lumora_Anti-Hair_Loss_Shampoo_Spa_Still_Life_y5lzhx.png",
+    "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548159/Shampoo_bottle_on_marble_vanity_28dbb7c8_2K_d0vswp.jpg",
+    "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548149/Shampoo_Bottle_Back_Label_Product_Shot_olvbmq.png",
   ],
   ugc: [
-    "/lumora-haircare-campaign.png",
-    "/lumora-botanical-portrait.jpg",
-    "/lumora-marble-lifestyle.jpg",
-    "/lumora-bottle-back.png",
+    "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548154/Lumora_Anti-Hair_Loss_Shampoo_Spa_Still_Life_y5lzhx.png",
+    "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548154/Lumora_Anti-Hair_Loss_Shampoo_Spa_Still_Life_y5lzhx.png",
+    "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548159/Shampoo_bottle_on_marble_vanity_28dbb7c8_2K_d0vswp.jpg",
+    "https://res.cloudinary.com/dg7htktxp/image/upload/v1793548149/Shampoo_Bottle_Back_Label_Product_Shot_olvbmq.png",
   ],
 };

@@ -9,7 +9,7 @@ const svg = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke
 
 // How-to-use video (9:16). Put the file in /public/videos and its first frame in /public/images.
 const HOW_VIDEO = {
-  src: "/videos/how-to-use.mp4",
+  src: "https://res.cloudinary.com/dg7htktxp/video/upload/v1793547980/how-to-use_ltkrep.mp4",
   label: "فيديو يشرح طريقة استعمال شامبو LUMORA",
 };
 
