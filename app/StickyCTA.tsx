@@ -39,7 +39,7 @@ export default function StickyCTA({ price }: { price?: number }) {
         visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0"
       }`}
     >
-      <div className="mx-auto flex max-w-xl items-center justify-between gap-3  border border-white/15 bg-forest-950/85 p-3 pe-3 ps-4 text-white shadow-xl shadow-black/25 backdrop-blur-xl">
+      <div className="mx-auto rounded-md flex max-w-xl items-center justify-between gap-3  border border-white/15 bg-forest-950/85 p-3 pe-3 ps-4 text-white shadow-xl shadow-black/25 backdrop-blur-xl">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{PRODUCT_NAME}</p>
           <p className="truncate text-xs text-white/65">

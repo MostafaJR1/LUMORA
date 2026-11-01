@@ -22,7 +22,7 @@ export const viewport: Viewport = { themeColor: "#0b2a1f" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={cairo.variable}>
-      <body className="font-sans">
+      <body>
         <MotionProvider>
           <ScrollProgress />
           {children}

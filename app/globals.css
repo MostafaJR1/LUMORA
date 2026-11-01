@@ -17,8 +17,39 @@
   --font-sans: var(--font-cairo), system-ui, sans-serif;
 }
 
-html { scroll-behavior: smooth; }
-body { background-color: var(--color-cream); color: var(--color-forest-900); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 7rem;
+  font-family: var(--font-cairo), Arial, sans-serif;
+}
+
+main section[id],
+main [id="results-title"],
+main [id="comment-ca-marche"],
+main [id="order-title"] {
+  scroll-margin-top: 7rem;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-forest-900);
+  font-family: var(--font-cairo), Arial, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  font-family: inherit;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
 :focus-visible { outline: 2px solid var(--color-gold-500); outline-offset: 3px; }
 details > summary { list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
