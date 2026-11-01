@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { Reveal, RevealGroup, RevealItem } from "./Motion";
-import { AddToCartButton } from "./cart";
-import { DELIVERY_ESTIMATE, RETURNS_PROMISE } from "./products";
+import { DELIVERY_ESTIMATE } from "./products";
+import OrderForm from "./OrderForm";
 
 /* =====================  INGREDIENTS (editorial, no icons, no stat band)  =====================
    Add a real photo per ingredient when you have one: photo: "/images/argan.jpg"
@@ -63,8 +63,8 @@ export function Ingredients() {
 
 /* =====================  ORDER STEPS (3 plain steps, no cards, no icons)  ===================== */
 const STEPS = [
-  { t: "اطلب من الموقع", d: "اختر المنتج وأرسل طلبك في دقيقة." },
-  { t: "نتصل بك للتأكيد", d: "نؤكد معك معلوماتك قبل تجهيز الطلب." },
+  { t: "اترك اسمك ورقم هاتفك", d: "املأ الاستمارة أسفل الصفحة وأرسل طلبك في ثوانٍ." },
+  { t: "نتصل بك للتأكيد", d: "نؤكد معك الكمية والعنوان قبل تجهيز الطلب." },
   { t: "استلم وادفع", d: `التوصيل خلال ${DELIVERY_ESTIMATE}، والدفع عند الاستلام.` },
 ];
 
@@ -92,18 +92,19 @@ export function QuickSteps() {
 /* =====================  CLOSING CTA (plain, text only, nothing overlapping)  ===================== */
 export function ClosingCTA() {
   return (
-    <section aria-label="اطلب الآن" className="bg-forest-900 py-16 text-center text-cream sm:py-20">
+    <section id="order-form" aria-label="اطلب الآن" className="scroll-mt-28 bg-forest-900 py-16 text-center text-cream sm:py-20">
       <Reveal className="mx-auto max-w-2xl px-5">
         <h2 className="text-3xl font-light leading-tight sm:text-4xl">
           جرّبه لمدة أسبوع،
           <span className="block font-semibold">واحكم بنفسك.</span>
         </h2>
         <p className="mt-4 text-cream/75">شامبو LUMORA ضد التساقط · 150 مل · بدون سلفات</p>
-        <div className="mt-7 flex justify-center">
-          <AddToCartButton productId="lumora-shampoo-150" variant="gold" size="lg" className="flex-none" />
+        <p className="mt-7 text-sm text-cream/80">اترك اسمك ورقم هاتفك وسنتصل بك لتأكيد طلبك.</p>
+        <div className="mt-4">
+          <OrderForm />
         </div>
         <p className="mt-5 text-sm text-cream/65">
-          الدفع عند الاستلام · التوصيل خلال {DELIVERY_ESTIMATE} · {RETURNS_PROMISE}
+          الدفع عند الاستلام · التوصيل خلال {DELIVERY_ESTIMATE}
         </p>
       </Reveal>
     </section>

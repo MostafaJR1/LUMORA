@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Reveal } from "./Motion";
-import { AddToCartButton, MAX_QTY } from "./cart";
 import { DELIVERY_ESTIMATE, PRODUCTS, money } from "./products";
 import { SHOTS } from "./Productshots";
-import { OrderButton } from "./OrderProvider";
+import { OrderButton } from "./OrderButton";
+import { buttonStyles } from "./buttonStyles";
 
 const P = PRODUCTS[0];
 const GALLERY = [SHOTS.bottleFront, SHOTS.marbleLifestyle, SHOTS.bottleBack, SHOTS.botanicalPortrait];
@@ -23,7 +23,6 @@ const ic = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeW
 
 export default function ProductSection() {
   const [img, setImg] = useState(0);
-  const [qty, setQty] = useState(1);
   const n = GALLERY.length;
   const go = (k: number) => setImg(((k % n) + n) % n);
 
@@ -120,18 +119,10 @@ export default function ProductSection() {
             ))}
           </ul>
 
-          {/* Quantity + add to cart */}
-          <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-            <div className="flex w-fit items-center rounded-lg border border-forest-900/20 bg-cream" dir="ltr">
-              <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="تقليل الكمية" className="flex h-10 w-10 items-center justify-center rounded-md transition hover:bg-white disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold-500">
-                <svg {...ic} className="h-4 w-4"><path d="M5 12h14" /></svg>
-              </button>
-              <span className="w-8 text-center text-sm font-semibold tabular-nums" aria-live="polite">{qty}</span>
-              <button type="button" onClick={() => setQty((q) => Math.min(MAX_QTY, q + 1))} disabled={qty >= MAX_QTY} aria-label="زيادة الكمية" className="flex h-10 w-10 items-center justify-center rounded-md transition hover:bg-white disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold-500">
-                <svg {...ic} className="h-4 w-4"><path d="M12 5v14M5 12h14" /></svg>
-              </button>
-            </div>
-            <AddToCartButton productId={P.id} qty={qty} variant="green" size="lg" className="w-full flex-1 justify-center sm:w-auto" />
+          <div className="mt-5">
+            <OrderButton className={buttonStyles({ variant: "green", size: "lg", className: "w-full justify-center sm:w-auto" })}>
+              اطلب الآن
+            </OrderButton>
           </div>
 
           <p className="mt-3.5 flex items-start gap-2 text-[0.6875rem] leading-relaxed text-forest-900/65">

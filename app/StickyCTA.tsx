@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AddToCartButton } from "./cart";
 import { money } from "./products";
+import { OrderButton } from "./OrderButton";
+import { buttonStyles } from "./buttonStyles";
 
-// Sticky bottom bar. One tap adds the product; the cart drawer then opens by itself (see CartDrawer.tsx).
-const PRODUCT_ID = "lumora-shampoo-150";
 const PRODUCT_NAME = "شامبو LUMORA ضد التساقط";
 const PRODUCT_SUB = "150 مل · بدون سلفات · الدفع عند الاستلام";
 
 export default function StickyCTA({ price }: { price?: number }) {
   const [scrolled, setScrolled] = useState(false);
   const [productInView, setProductInView] = useState(false);
+  const [orderFormInView, setOrderFormInView] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 520);
@@ -29,7 +29,15 @@ export default function StickyCTA({ price }: { price?: number }) {
     return () => io.disconnect();
   }, []);
 
-  const visible = scrolled && !productInView;
+  useEffect(() => {
+    const el = document.getElementById("order-form");
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => setOrderFormInView(entry.isIntersecting), { threshold: 0.25 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const visible = scrolled && !productInView && !orderFormInView;
 
   return (
     <div
@@ -47,7 +55,12 @@ export default function StickyCTA({ price }: { price?: number }) {
             {PRODUCT_SUB}
           </p>
         </div>
-        <AddToCartButton productId={PRODUCT_ID} variant="gold" size="md" className="flex-none" />
+        <OrderButton
+          tabIndex={visible ? 0 : -1}
+          className={buttonStyles({ variant: "gold", size: "md", className: "flex-none" })}
+        >
+          اطلب الآن
+        </OrderButton>
       </div>
     </div>
   );

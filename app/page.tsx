@@ -3,14 +3,11 @@
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import Image from "next/image";
 import ScrollToTop from "./ScrollToTop";
-import { CartProvider, CartButton } from "./cart";
-import CartDrawer from "./CartDrawer";
 import ProductSection from "./Product";
 import StickyCTA from "./StickyCTA";
-import { OrderProvider, OrderButton } from "./OrderProvider";
+import { OrderButton } from "./OrderButton";
 import { HowItWorks } from "./Proof";
 import { Ingredients, QuickSteps, ClosingCTA } from "./LumoraSections";
-import { SHOTS } from "./Productshots"; // ← product photos (see /public/images)
 import { DELIVERY_ESTIMATE } from "./products";
 import { buttonStyles } from "./buttonStyles";
 
@@ -43,7 +40,6 @@ function Header() {
 
   useEffect(() => {
     const onScroll = () => {
-      if (document.body.style.position === "fixed") return; // cart drawer is open (page is frozen)
       setScrolled(window.scrollY > 24);
     };
     onScroll();
@@ -170,7 +166,6 @@ function Header() {
             >
               اطلب الآن
             </OrderButton>
-            <CartButton />
           </div>
         </div>
 
@@ -512,12 +507,6 @@ function Footer() {
 
   return (
     <footer className="bg-forest-950 text-cream">
-      {/* photo strip: bottle base + reflection, fading into the footer */}
-      <div aria-hidden className="relative h-16 overflow-hidden sm:h-24">
-        <Image src={SHOTS.bottleFront.src} alt="" fill sizes="100vw" className="object-cover object-top" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-forest-950/30 to-forest-950" />
-      </div>
-
       <div
         className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:[grid-template-columns:var(--cols)]"
         style={{ "--cols": `1.4fr repeat(${columns.length}, 1fr)` } as CSSProperties}
@@ -587,8 +576,6 @@ export default function Page() {
       >
         تخطَّ إلى المحتوى
       </a>
-      <CartProvider>
-        <OrderProvider>
         <Header />
         <main id="main" tabIndex={-1} className="outline-none">
           <Hero />
@@ -602,11 +589,8 @@ export default function Page() {
           <ClosingCTA />
         </main>
         <Footer />
-        <CartDrawer />
         <StickyCTA />
         <ScrollToTop />
-        </OrderProvider>
-      </CartProvider>
     </div>
   );
 }

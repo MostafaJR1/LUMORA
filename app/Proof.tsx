@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { Reveal, RevealGroup, RevealItem } from "./Motion";
 import { U, IMG } from "./MediaMock";
-import { AddToCartButton } from "./cart";
+import { OrderButton } from "./OrderButton";
+import { buttonStyles } from "./buttonStyles";
 
 const svg = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
 
@@ -93,8 +94,9 @@ export function HowItWorks() {
             لا يُستعمل على الشعر الجاف، ولا على الشعر المعالج بالبروتين.
           </p>
 
-          {/* adds to the cart; the cart drawer then opens by itself (see CartDrawer.tsx) */}
-          <AddToCartButton productId="lumora-shampoo-150" variant="green" size="lg" className="group mt-6" />
+          <OrderButton className={buttonStyles({ variant: "green", size: "lg", className: "group mt-6" })}>
+            اطلب الآن
+          </OrderButton>
         </Reveal>
       </div>
     </section>
