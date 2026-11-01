@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Cairo } from "next/font/google";
 import { MotionProvider, ScrollProgress } from "./Motion";
+import FacebookPixel from "./FacebookPixel";
+import CookieBanner from "./CookieBanner";
 import "./globals.css";
 
 // Cairo: variable Arabic + Latin font (supports every weight used: light → semibold)
@@ -27,6 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ScrollProgress />
           {children}
         </MotionProvider>
+        <FacebookPixel />
+        <CookieBanner />
       </body>
     </html>
   );

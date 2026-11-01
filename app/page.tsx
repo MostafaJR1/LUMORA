@@ -10,6 +10,7 @@ import { HowItWorks } from "./Proof";
 import { Ingredients, QuickSteps, ClosingCTA } from "./LumoraSections";
 import { DELIVERY_ESTIMATE } from "./products";
 import { buttonStyles } from "./buttonStyles";
+import PixelViewContent from "./PixelViewContent";
 
 /* =====================  HEADER  ===================== */
 const icon = "h-5 w-5 stroke-current fill-none stroke-[1.6]";
@@ -560,6 +561,13 @@ function Footer() {
             هذا المنتج مستحضر تجميل للاستعمال الخارجي، والمعلومات المعروضة لأغراض إعلامية فقط.
             تختلف النتائج من شخص لآخر. استشر طبيبك إذا كنت تعاني من مشكلة صحية في فروة الرأس.
           </p>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("lumora:open-consent"))}
+            className="mt-2 inline-flex min-h-11 items-center text-xs text-cream/65 underline decoration-white/30 underline-offset-4 transition hover:text-gold-300"
+          >
+            إعدادات الخصوصية
+          </button>
         </div>
       </div>
     </footer>
@@ -576,6 +584,7 @@ export default function Page() {
       >
         تخطَّ إلى المحتوى
       </a>
+      <PixelViewContent />
         <Header />
         <main id="main" tabIndex={-1} className="outline-none">
           <Hero />

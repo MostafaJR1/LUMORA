@@ -1,5 +1,7 @@
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin";
 import { isValidName, normalizeName, normalizePhone } from "../../../lib/phone";
+import { after } from "next/server";
+import { sendMetaLead } from "../../../lib/metaCapi";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -30,6 +32,14 @@ export async function POST(request: Request) {
     return Response.json({ error: "invalid_phone" }, { status: 400 });
   }
 
+  const marketingConsent = record.marketingConsent === true;
+  const eventId = typeof record.eventId === "string" ? record.eventId.trim() : "";
+  const eventSourceUrl = typeof record.eventSourceUrl === "string"
+    ? record.eventSourceUrl
+    : "";
+  const fbp = typeof record.fbp === "string" ? record.fbp : undefined;
+  const fbc = typeof record.fbc === "string" ? record.fbc : undefined;
+
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return Response.json({ error: "not_configured" }, { status: 501 });
   }
@@ -38,8 +48,25 @@ export async function POST(request: Request) {
     const { error } = await getSupabaseAdmin()
       .from("leads")
       .insert({ customer_name: customerName, phone });
-    if (!error) return Response.json({ ok: true });
-    if (error.code === "23505") return Response.json({ ok: true });
+    if (!error || error.code === "23505") {
+      if (marketingConsent && eventId) {
+        const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+          || request.headers.get("x-real-ip")?.trim()
+          || undefined;
+        const clientUserAgent = request.headers.get("user-agent") || undefined;
+        after(() => sendMetaLead({
+          eventId,
+          name: customerName,
+          phone,
+          eventSourceUrl,
+          clientIp,
+          clientUserAgent,
+          fbp,
+          fbc,
+        }));
+      }
+      return Response.json({ ok: true });
+    }
     return Response.json(
       { error: "تعذّر إرسال طلبك. حاول مرة أخرى بعد قليل." },
       { status: 502 },

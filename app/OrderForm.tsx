@@ -3,6 +3,9 @@
 import { useState, type FormEvent } from "react";
 import { isValidName, normalizeName, normalizePhone } from "../lib/phone";
 import { buttonStyles } from "./buttonStyles";
+import { hasMarketingConsent } from "../lib/consent";
+import { createEventId, trackLead } from "../lib/fpixel";
+import { PRODUCTS } from "./products";
 
 export default function OrderForm() {
   const [name, setName] = useState("");
@@ -43,10 +46,29 @@ export default function OrderForm() {
 
     setSending(true);
     try {
+      const eventId = createEventId("lead");
+      const marketingAllowed = hasMarketingConsent();
+      const fbp = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("_fbp="))
+        ?.split("=")[1];
+      const fbc = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("_fbc="))
+        ?.split("=")[1];
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: normalizedName, phone: normalizedPhone, website }),
+        body: JSON.stringify({
+          name: normalizedName,
+          phone: normalizedPhone,
+          website,
+          marketingConsent: marketingAllowed,
+          eventId: marketingAllowed ? eventId : undefined,
+          eventSourceUrl: marketingAllowed ? window.location.href : undefined,
+          fbp: marketingAllowed ? fbp : undefined,
+          fbc: marketingAllowed ? fbc : undefined,
+        }),
       });
       const data = await response.json().catch(() => null);
       if (!response.ok || !data || data.ok !== true) {
@@ -61,6 +83,16 @@ export default function OrderForm() {
           return;
         }
         throw new Error();
+      }
+      if (marketingAllowed) {
+        const item = PRODUCTS[0];
+        trackLead({
+          content_name: item?.name ?? "LUMORA product",
+          content_ids: item ? [item.id] : [],
+          content_type: "product",
+          value: item?.price ?? 149,
+          currency: "MAD",
+        }, eventId);
       }
       setSuccess(true);
     } catch {
