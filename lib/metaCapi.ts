@@ -1,5 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
+import { PRODUCTS } from "../app/products";
 
 type MetaLeadParams = {
   eventId: string;
@@ -27,16 +28,20 @@ export async function sendMetaLead(params: MetaLeadParams) {
   if (!pixelId || !accessToken) return;
 
   const { first, last } = splitName(params.name);
-  const phone = params.phone.replace(/\s|[().-]/g, "").replace(/^0/, "+212");
+  const phoneDigits = params.phone.replace(/\D/g, "");
+  const phone = phoneDigits.startsWith("212")
+    ? `212${phoneDigits.slice(3)}`
+    : `212${phoneDigits.replace(/^0/, "")}`;
   const testEventCode = process.env.META_TEST_EVENT_CODE;
   const graphVersion = process.env.META_GRAPH_VERSION || "v23.0";
+  const product = PRODUCTS[0];
 
-  const userData: Record<string, string> = {
-    ph: normalizedHash(phone),
-    country: normalizedHash("ma"),
+  const userData: Record<string, string | string[]> = {
+    ph: [normalizedHash(phone)],
+    country: [normalizedHash("ma")],
   };
-  if (first) userData.fn = normalizedHash(first);
-  if (last) userData.ln = normalizedHash(last);
+  if (first) userData.fn = [normalizedHash(first)];
+  if (last) userData.ln = [normalizedHash(last)];
   if (params.clientIp) userData.client_ip_address = params.clientIp;
   if (params.clientUserAgent) userData.client_user_agent = params.clientUserAgent;
   if (params.fbp) userData.fbp = params.fbp;
@@ -50,17 +55,30 @@ export async function sendMetaLead(params: MetaLeadParams) {
       event_source_url: params.eventSourceUrl,
       event_id: params.eventId,
       user_data: userData,
-      custom_data: { currency: "MAD", content_type: "product" },
+      custom_data: {
+        value: product.price,
+        currency: "MAD",
+        content_ids: [product.id],
+        content_type: "product",
+        content_name: product.name,
+      },
     }],
+    access_token: accessToken,
   };
   if (testEventCode) payload.test_event_code = testEventCode;
 
-  await fetch(
-    `https://graph.facebook.com/${graphVersion}/${pixelId}/events?access_token=${encodeURIComponent(accessToken)}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    },
-  ).catch(() => undefined);
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/${graphVersion}/${pixelId}/events`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(3000),
+      },
+    );
+    console.log(response.status);
+  } catch {
+    // Network and timeout failures are intentionally not logged with request details.
+  }
 }
