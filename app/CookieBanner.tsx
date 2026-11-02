@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CONSENT_EVENT, getConsent, setConsent } from "../lib/consent";
+import { CONSENT_EVENT, CONSENT_REOPEN_EVENT, getConsent, setConsent } from "../lib/consent";
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
@@ -9,11 +9,11 @@ export default function CookieBanner() {
   useEffect(() => {
     const openSettings = () => setVisible(true);
     const consentChanged = () => setVisible(false);
-    window.addEventListener("lumora:open-consent", openSettings);
+    window.addEventListener(CONSENT_REOPEN_EVENT, openSettings);
     window.addEventListener(CONSENT_EVENT, consentChanged);
     queueMicrotask(() => setVisible(getConsent() === null));
     return () => {
-      window.removeEventListener("lumora:open-consent", openSettings);
+      window.removeEventListener(CONSENT_REOPEN_EVENT, openSettings);
       window.removeEventListener(CONSENT_EVENT, consentChanged);
     };
   }, []);

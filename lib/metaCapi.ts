@@ -23,9 +23,9 @@ function splitName(name: string) {
 }
 
 export async function sendMetaLead(params: MetaLeadParams) {
-  const pixelId = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
+  const pixelId = process.env.NEXT_PUBLIC_FB_PIXEL_ID?.trim();
   const accessToken = process.env.META_CAPI_ACCESS_TOKEN;
-  if (!pixelId || !accessToken) return;
+  if (!pixelId || !/^\d+$/.test(pixelId) || !accessToken) return;
 
   const { first, last } = splitName(params.name);
   const phoneDigits = params.phone.replace(/\D/g, "");
@@ -33,8 +33,9 @@ export async function sendMetaLead(params: MetaLeadParams) {
     ? `212${phoneDigits.slice(3)}`
     : `212${phoneDigits.replace(/^0/, "")}`;
   const testEventCode = process.env.META_TEST_EVENT_CODE;
-  const graphVersion = process.env.META_GRAPH_VERSION || "v23.0";
+  const graphVersion = process.env.META_GRAPH_VERSION?.trim() || "v23.0";
   const product = PRODUCTS[0];
+  if (!product) return;
 
   const userData: Record<string, string | string[]> = {
     ph: [normalizedHash(phone)],

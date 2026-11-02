@@ -1,5 +1,6 @@
 export const CONSENT_STORAGE_KEY = "lumora_consent_v1";
 export const CONSENT_EVENT = "lumora:consent-change";
+export const CONSENT_REOPEN_EVENT = "lumora:reopen-consent";
 
 export type ConsentChoice = "granted" | "denied";
 
@@ -35,6 +36,21 @@ export function setConsent(choice: ConsentChoice) {
     // Consent can remain effective for this page if storage is unavailable.
   }
   window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: state }));
+}
+
+export function resetConsentChoice() {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.removeItem(CONSENT_STORAGE_KEY);
+  } catch {
+    // The reopen event still works if browser storage is unavailable.
+  }
+  window.dispatchEvent(new CustomEvent(CONSENT_EVENT, {
+    detail: { choice: "denied", timestamp: "" },
+  }));
+  window.dispatchEvent(new CustomEvent(CONSENT_REOPEN_EVENT));
+  window.fbq?.("consent", "revoke");
 }
 
 export function hasMarketingConsent() {

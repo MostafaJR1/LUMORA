@@ -13,7 +13,11 @@ export default function FacebookPixel() {
       const detail = event instanceof CustomEvent
         ? event.detail as ConsentState | undefined
         : undefined;
-      setAllowed(detail?.choice === "granted" || getConsent()?.choice === "granted");
+      const consent = detail?.choice ?? getConsent()?.choice;
+      setAllowed(consent === "granted");
+      if (consent === "denied") {
+        fbq("consent", "revoke");
+      }
     };
 
     update();
@@ -28,8 +32,16 @@ export default function FacebookPixel() {
   useEffect(() => {
     if (!allowed || !FB_PIXEL_ID) return;
     fbq("init", FB_PIXEL_ID);
+    fbq("consent", "grant");
     fbq("track", "PageView");
   }, [allowed]);
+
+  useEffect(() => {
+    const consent = getConsent();
+    if (consent?.choice === "denied") {
+      fbq("consent", "revoke");
+    }
+  }, []);
 
   if (!FB_PIXEL_ID || !allowed) return null;
 

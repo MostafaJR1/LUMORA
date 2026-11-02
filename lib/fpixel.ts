@@ -1,7 +1,12 @@
-export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
+import { PRODUCTS } from "../app/products";
+import { hasMarketingConsent } from "./consent";
+
+const pixelId = process.env.NEXT_PUBLIC_FB_PIXEL_ID?.trim();
+export const FB_PIXEL_ID =
+  pixelId && /^\d+$/.test(pixelId) ? pixelId : undefined;
 
 export type Fbq = (
-  command: "init" | "track" | "trackCustom",
+  command: "init" | "track" | "trackCustom" | "consent",
   ...args: unknown[]
 ) => void;
 
@@ -24,17 +29,39 @@ export function createEventId(prefix = "lumora") {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 }
 
+export function getProductTrackingData() {
+  const product = PRODUCTS[0];
+  if (!product) {
+    return {
+      currency: "MAD",
+      content_ids: [],
+      content_type: "product",
+      content_name: "",
+    };
+  }
+  return {
+    value: product.price,
+    currency: "MAD",
+    content_ids: [product.id],
+    content_type: "product",
+    content_name: product.name,
+  };
+}
+
 export function trackViewContent(payload: Record<string, unknown>, eventId = createEventId("view")) {
+  if (!hasMarketingConsent()) return eventId;
   fbq("track", "ViewContent", payload, { eventID: eventId });
   return eventId;
 }
 
 export function trackInitiateCheckout(payload: Record<string, unknown>, eventId = createEventId("checkout")) {
+  if (!hasMarketingConsent()) return eventId;
   fbq("track", "InitiateCheckout", payload, { eventID: eventId });
   return eventId;
 }
 
 export function trackLead(payload: Record<string, unknown>, eventId = createEventId("lead")) {
+  if (!hasMarketingConsent()) return eventId;
   fbq("track", "Lead", payload, { eventID: eventId });
   return eventId;
 }

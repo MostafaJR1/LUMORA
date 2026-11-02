@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { isValidName, normalizeName, normalizePhone } from "../lib/phone";
 import { buttonStyles } from "./buttonStyles";
 import { hasMarketingConsent } from "../lib/consent";
-import { createEventId, trackLead } from "../lib/fpixel";
-import { PRODUCTS } from "./products";
+import { createEventId, getProductTrackingData, trackInitiateCheckout, trackLead } from "../lib/fpixel";
 
 export default function OrderForm() {
   const [name, setName] = useState("");
@@ -16,9 +15,22 @@ export default function OrderForm() {
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [submissionError, setSubmissionError] = useState("");
+  const initiatedCheckout = useRef(false);
+  const submitting = useRef(false);
+
+  const handleFirstFocus = () => {
+    if (initiatedCheckout.current) return;
+    initiatedCheckout.current = true;
+    if (!hasMarketingConsent()) return;
+    trackInitiateCheckout({
+      ...getProductTrackingData(),
+      num_items: 1,
+    });
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submitting.current) return;
     setNameError("");
     setPhoneError("");
     setSubmissionError("");
@@ -44,18 +56,29 @@ export default function OrderForm() {
       return;
     }
 
+    submitting.current = true;
     setSending(true);
     try {
       const eventId = createEventId("lead");
       const marketingAllowed = hasMarketingConsent();
-      const fbp = document.cookie
+      const fbp = marketingAllowed ? document.cookie
         .split("; ")
         .find((row) => row.startsWith("_fbp="))
-        ?.split("=")[1];
-      const fbc = document.cookie
+        ?.split("=")[1] : undefined;
+      const fbc = marketingAllowed ? document.cookie
         .split("; ")
         .find((row) => row.startsWith("_fbc="))
-        ?.split("=")[1];
+        ?.split("=")[1] : undefined;
+      const trackingFields = marketingAllowed ? {
+        marketing: true,
+        eventId,
+        sourceUrl: window.location.href,
+        ...(fbp ? { fbp } : {}),
+        ...(fbc ? { fbc } : {}),
+      } : {
+        marketing: false,
+        eventId,
+      };
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -63,11 +86,7 @@ export default function OrderForm() {
           name: normalizedName,
           phone: normalizedPhone,
           website,
-          marketingConsent: marketingAllowed,
-          eventId: marketingAllowed ? eventId : undefined,
-          eventSourceUrl: marketingAllowed ? window.location.href : undefined,
-          fbp: marketingAllowed ? fbp : undefined,
-          fbc: marketingAllowed ? fbc : undefined,
+          ...trackingFields,
         }),
       });
       const data = await response.json().catch(() => null);
@@ -85,19 +104,15 @@ export default function OrderForm() {
         throw new Error();
       }
       if (marketingAllowed) {
-        const item = PRODUCTS[0];
         trackLead({
-          content_name: item?.name ?? "LUMORA product",
-          content_ids: item ? [item.id] : [],
-          content_type: "product",
-          value: item?.price ?? 149,
-          currency: "MAD",
+          ...getProductTrackingData(),
         }, eventId);
       }
       setSuccess(true);
     } catch {
       setSubmissionError("تعذّر إرسال طلبك. حاول مرة أخرى بعد قليل.");
     } finally {
+      submitting.current = false;
       setSending(false);
     }
   };
@@ -112,7 +127,7 @@ export default function OrderForm() {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="mx-auto max-w-md" dir="rtl">
+    <form onSubmit={submit} onFocusCapture={handleFirstFocus} noValidate className="mx-auto max-w-md" dir="rtl">
       <div className="flex flex-col gap-3">
         <div>
           <label htmlFor="order-name" className="sr-only">الاسم الكامل</label>

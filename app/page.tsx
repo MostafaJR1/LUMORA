@@ -11,6 +11,7 @@ import { Ingredients, QuickSteps, ClosingCTA } from "./LumoraSections";
 import { DELIVERY_ESTIMATE } from "./products";
 import { buttonStyles } from "./buttonStyles";
 import PixelViewContent from "./PixelViewContent";
+import { resetConsentChoice } from "../lib/consent";
 
 /* =====================  HEADER  ===================== */
 const icon = "h-5 w-5 stroke-current fill-none stroke-[1.6]";
@@ -563,10 +564,10 @@ function Footer() {
           </p>
           <button
             type="button"
-            onClick={() => window.dispatchEvent(new Event("lumora:open-consent"))}
+            onClick={resetConsentChoice}
             className="mt-2 inline-flex min-h-11 items-center text-xs text-cream/65 underline decoration-white/30 underline-offset-4 transition hover:text-gold-300"
           >
-            إعدادات الخصوصية
+            إعدادات ملفات تعريف الارتباط
           </button>
         </div>
       </div>
