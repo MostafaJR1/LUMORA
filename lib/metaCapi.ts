@@ -25,7 +25,9 @@ function splitName(name: string) {
 export async function sendMetaLead(params: MetaLeadParams) {
   const pixelId = process.env.NEXT_PUBLIC_FB_PIXEL_ID?.trim();
   const accessToken = process.env.META_CAPI_ACCESS_TOKEN;
-  if (!pixelId || !/^\d+$/.test(pixelId) || !accessToken) return;
+  if (!pixelId || !/^\d+$/.test(pixelId) || !accessToken) {
+    return { ok: false, configurationError: true };
+  }
 
   const { first, last } = splitName(params.name);
   const phoneDigits = params.phone.replace(/\D/g, "");
@@ -35,7 +37,9 @@ export async function sendMetaLead(params: MetaLeadParams) {
   const testEventCode = process.env.META_TEST_EVENT_CODE;
   const graphVersion = process.env.META_GRAPH_VERSION?.trim() || "v23.0";
   const product = PRODUCTS[0];
-  if (!product) return;
+  if (!product) {
+    return { ok: false, configurationError: true };
+  }
 
   const userData: Record<string, string | string[]> = {
     ph: [normalizedHash(phone)],
@@ -78,8 +82,47 @@ export async function sendMetaLead(params: MetaLeadParams) {
         signal: AbortSignal.timeout(3000),
       },
     );
-    console.log(response.status);
-  } catch {
-    // Network and timeout failures are intentionally not logged with request details.
+    let responseBody: unknown = null;
+    try {
+      responseBody = await response.json();
+    } catch {
+      responseBody = null;
+    }
+
+    const apiError =
+      responseBody && typeof responseBody === "object" && "error" in responseBody
+        ? (responseBody as { error?: unknown }).error
+        : undefined;
+    const graphError =
+      apiError && typeof apiError === "object"
+        ? apiError as { type?: unknown; code?: unknown }
+        : undefined;
+    const graphErrorType =
+      graphError && typeof graphError.type === "string" ? graphError.type : undefined;
+    const graphErrorCode =
+      graphError && typeof graphError.code === "number" ? graphError.code : undefined;
+
+    if (!response.ok || graphError) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[Meta CAPI] Lead request failed", {
+          status: response.status,
+          graphErrorType,
+          graphErrorCode,
+        });
+      }
+      return { ok: false, status: response.status, graphErrorType, graphErrorCode };
+    }
+
+    return { ok: true, status: response.status };
+  } catch (error) {
+    const timedOut =
+      error instanceof DOMException
+      && (error.name === "TimeoutError" || error.name === "AbortError");
+    if (process.env.NODE_ENV === "development") {
+      console.error(
+        timedOut ? "[Meta CAPI] Lead request timed out" : "[Meta CAPI] Lead network request failed",
+      );
+    }
+    return { ok: false, timedOut, networkError: true };
   }
 }

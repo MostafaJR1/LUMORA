@@ -19,9 +19,10 @@ export default function OrderForm() {
   const submitting = useRef(false);
 
   const handleFirstFocus = () => {
-    if (initiatedCheckout.current) return;
+    if (initiatedCheckout.current || !hasMarketingConsent()) return;
+
     initiatedCheckout.current = true;
-    if (!hasMarketingConsent()) return;
+
     trackInitiateCheckout({
       ...getProductTrackingData(),
       num_items: 1,

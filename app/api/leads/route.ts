@@ -1,7 +1,5 @@
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin";
 import { isValidName, normalizeName, normalizePhone } from "../../../lib/phone";
-import { after } from "next/server";
-import { sendMetaLead } from "../../../lib/metaCapi";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -11,7 +9,7 @@ export async function POST(request: Request) {
 
   const record = body as Record<string, unknown>;
   if (typeof record.website === "string" && record.website.trim().length > 0) {
-    return Response.json({ ok: true });
+    return Response.json({ error: "honeypot" }, { status: 400 });
   }
 
   if (typeof record.name !== "string") {
@@ -35,7 +33,9 @@ export async function POST(request: Request) {
   if (typeof record.marketing !== "boolean") {
     return Response.json({ error: "invalid_tracking" }, { status: 400 });
   }
-  const marketingConsent = record.marketing;
+  // Consent is stored in browser localStorage, so the client boolean is not
+  // server-verifiable. It is accepted only for request validation and is never
+  // used to trigger Meta CAPI.
 
   if (
     typeof record.eventId !== "string"
@@ -44,55 +44,6 @@ export async function POST(request: Request) {
     || !/^[A-Za-z0-9_-]+$/.test(record.eventId)
   ) {
     return Response.json({ error: "invalid_tracking" }, { status: 400 });
-  }
-  const eventId = record.eventId;
-
-  let sourceUrl: string | undefined;
-  let fbp: string | undefined;
-  let fbc: string | undefined;
-
-  if (marketingConsent) {
-    if (
-      typeof record.sourceUrl !== "string"
-      || record.sourceUrl.length > 2048
-    ) {
-      return Response.json({ error: "invalid_tracking" }, { status: 400 });
-    }
-    try {
-      const parsedSourceUrl = new URL(record.sourceUrl);
-      const requestOrigin = new URL(request.url).origin;
-      if (
-        !["http:", "https:"].includes(parsedSourceUrl.protocol)
-        || parsedSourceUrl.origin !== requestOrigin
-      ) {
-        return Response.json({ error: "invalid_tracking" }, { status: 400 });
-      }
-      sourceUrl = record.sourceUrl;
-    } catch {
-      return Response.json({ error: "invalid_tracking" }, { status: 400 });
-    }
-
-    if (record.fbp !== undefined) {
-      if (
-        typeof record.fbp !== "string"
-        || record.fbp.length > 256
-        || !/^fb\.\d\.\d+\.\d+$/.test(record.fbp)
-      ) {
-        return Response.json({ error: "invalid_tracking" }, { status: 400 });
-      }
-      fbp = record.fbp;
-    }
-
-    if (record.fbc !== undefined) {
-      if (
-        typeof record.fbc !== "string"
-        || record.fbc.length > 256
-        || !/^fb\.\d\.\d+\..+$/.test(record.fbc)
-      ) {
-        return Response.json({ error: "invalid_tracking" }, { status: 400 });
-      }
-      fbc = record.fbc;
-    }
   }
 
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -103,24 +54,11 @@ export async function POST(request: Request) {
     const { error } = await getSupabaseAdmin()
       .from("leads")
       .insert({ customer_name: customerName, phone });
-    if (!error || error.code === "23505") {
-      if (marketingConsent && eventId) {
-        const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-          || request.headers.get("x-real-ip")?.trim()
-          || undefined;
-        const clientUserAgent = request.headers.get("user-agent") || undefined;
-        after(() => sendMetaLead({
-          eventId,
-          name: customerName,
-          phone,
-          eventSourceUrl: sourceUrl ?? "",
-          clientIp,
-          clientUserAgent,
-          fbp,
-          fbc,
-        }));
-      }
+    if (!error) {
       return Response.json({ ok: true });
+    }
+    if (error.code === "23505") {
+      return Response.json({ error: "duplicate_lead" }, { status: 409 });
     }
     return Response.json(
       { error: "تعذّر إرسال طلبك. حاول مرة أخرى بعد قليل." },
