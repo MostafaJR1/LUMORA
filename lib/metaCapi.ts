@@ -26,8 +26,9 @@ export async function sendMetaLead(params: MetaLeadParams) {
   const pixelId = process.env.NEXT_PUBLIC_FB_PIXEL_ID?.trim();
   const accessToken = process.env.META_CAPI_ACCESS_TOKEN;
   if (!pixelId || !/^\d+$/.test(pixelId) || !accessToken) {
-    return { ok: false, configurationError: true };
-  }
+  console.error("[Meta CAPI] Missing pixel id or access token");
+  return { ok: false, configurationError: true };
+}
 
   const { first, last } = splitName(params.name);
   const phoneDigits = params.phone.replace(/\D/g, "");
@@ -103,15 +104,15 @@ export async function sendMetaLead(params: MetaLeadParams) {
       graphError && typeof graphError.code === "number" ? graphError.code : undefined;
 
     if (!response.ok || graphError) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("[Meta CAPI] Lead request failed", {
-          status: response.status,
-          graphErrorType,
-          graphErrorCode,
-        });
-      }
-      return { ok: false, status: response.status, graphErrorType, graphErrorCode };
-    }
+  console.error("[Meta CAPI] Lead failed", {
+    status: response.status,
+    error: apiError, // message, code, fbtrace_id
+  });
+  return { ok: false, status: response.status, graphErrorType, graphErrorCode };
+}
+
+console.log("[Meta CAPI] Lead sent", response.status, responseBody);
+return { ok: true, status: response.status };
 
     return { ok: true, status: response.status };
   } catch (error) {

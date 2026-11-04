@@ -60,8 +60,12 @@ export function trackInitiateCheckout(payload: Record<string, unknown>, eventId 
   return eventId;
 }
 
+// Call only after /api/leads succeeded, and pass the SAME eventId that was
+// sent to the API, otherwise Meta cannot deduplicate browser and server.
 export function trackLead(payload: Record<string, unknown>, eventId = createEventId("lead")) {
   if (!hasMarketingConsent()) return eventId;
-  fbq("track", "Lead", payload, { eventID: eventId });
+  if (payload.ok) {
+    fbq("track", "Lead", getProductTrackingData(), { eventID: eventId });
+  }
   return eventId;
 }

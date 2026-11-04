@@ -1,5 +1,8 @@
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin";
 import { isValidName, normalizeName, normalizePhone } from "../../../lib/phone";
+import { after } from "next/server";
+import { sendMetaLead } from "../../../lib/metaCapi";
+
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -55,8 +58,27 @@ export async function POST(request: Request) {
       .from("leads")
       .insert({ customer_name: customerName, phone });
     if (!error) {
-      return Response.json({ ok: true });
-    }
+  if (record.marketing === true) {
+    const cookie = request.headers.get("cookie") ?? "";
+    const getCookie = (n: string) =>
+      cookie.match(new RegExp(`(?:^|; )${n}=([^;]*)`))?.[1];
+
+    after(() =>
+      sendMetaLead({
+        eventId: record.eventId as string,
+        name: customerName,
+        phone,
+        eventSourceUrl:
+          request.headers.get("referer") ?? `https://${request.headers.get("host")}`,
+        clientIp: request.headers.get("x-forwarded-for")?.split(",")[0].trim(),
+        clientUserAgent: request.headers.get("user-agent") ?? undefined,
+        fbp: getCookie("_fbp"),
+        fbc: getCookie("_fbc"),
+      }),
+    );
+  }
+  return Response.json({ ok: true });
+}
     if (error.code === "23505") {
       return Response.json({ error: "duplicate_lead" }, { status: 409 });
     }
